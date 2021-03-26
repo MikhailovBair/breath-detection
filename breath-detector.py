@@ -3,16 +3,18 @@ import cv2
 from matplotlib import pyplot as plt
 import json
 
-#cap = cv2.VideoCapture("videos/test.MOV")
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture("videos/Eugene.MOV")
+#cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FPS, 30)
 face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-chest_sizes = np.array([])
-times = np.array([])
+chest_sizes = np.array([0])
+times = np.array([0])
+diffs = np.array([0])
+answer = np.array([0])
 
 i = 0
 x, y, w, h = 0, 0, 0, 0
@@ -39,25 +41,26 @@ while (True):
     cnt = np.sum((np.sum(np.abs(crop_img - mean), axis=2) < 40))
 
     chest_sizes = np.append(chest_sizes, cnt / (np.shape(crop_img)[0] * np.shape(crop_img)[1]))
-    times = np.append(times, i / 30)
+    if abs(chest_sizes[-1] - chest_sizes[-2]) < 0.01:
+        answer = np.append(answer, answer[-1] + chest_sizes[-1] - chest_sizes[-2])
+        times = np.append(times, i / 30)
 
-    ax.plot(times, chest_sizes)
+
+    ax.plot(times, answer)
     fig.canvas.draw()
     plot_img_np = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
     plot_img_np = plot_img_np.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     plt.cla()
     cv2.imshow('Graph', plot_img_np)
-
-    #cv2.rectangle(crop_img, (0, 0), (200, 200), mean, cv2.FILLED)
     cv2.imshow('Crop', crop_img)
 
     print(i / 30, i)
 
     if i % 100 == 0:
-        with open("chest_sizes_120_test.json", "w") as write_file:
-            json.dump(chest_sizes.tolist(), write_file)
+        with open("answer_120_Eugene.json", "w") as write_file:
+            json.dump(answer.tolist(), write_file)
 
-        with open("times_fixed_120_test.json", "w") as write_file:
+        with open("times_fixed_120_Eugene.json", "w") as write_file:
             json.dump(times.tolist(), write_file)
 
 
