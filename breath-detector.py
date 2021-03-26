@@ -83,9 +83,23 @@ def get_frequency():
     plt.xlim(.1, 3)
     plt.ylim(0, 100)
     plt.show()
-    mask = (x >= .29)
+    mask = (x >= .28)
     frequency = x[mask][abs(y[mask]).argmax()]
     return frequency
+
+
+def make_verdict(freq, times):
+    print("Частота вашего дыхания: {:.2} вздохов в секунду".format(freq))
+    print("За время измерений вы вздохнули {:.0f} раз".format(times / 30 * freq))
+    verdict = ""
+    breath_in_minute = freq * 60
+    if 15 <= breath_in_minute <= 20:
+        verdict = "Ваше дыхание нормальное"
+    elif breath_in_minute > 20:
+        verdict = "Ваше дыхание учащено"
+    else:
+        verdict = "Ваше дыхание нечастое"
+    print(verdict)
 
 
 if not should_not_process_video:
@@ -96,4 +110,4 @@ cv2.destroyAllWindows()
 
 
 freq = get_frequency()
-print(freq, len(breath_changes) / 30 * freq)
+make_verdict(freq, len(breath_changes))
