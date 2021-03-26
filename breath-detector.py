@@ -7,6 +7,7 @@ from scipy.fft import fft, fftfreq
 
 
 DETECTION_CHANGE_PERIOD = 120
+FPS = 30
 name = sys.argv[1]
 extension = sys.argv[2]
 should_not_process_video = int(sys.argv[3])
@@ -15,7 +16,7 @@ breath_changes_name = "breath_changes_" + name + ".json"
 cap = cv2.VideoCapture(video_name)
 
 # cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FPS, 30)
+cap.set(cv2.CAP_PROP_FPS, FPS)
 face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 
 fig = plt.figure()
@@ -78,7 +79,7 @@ def get_frequency():
     plt.figure(figsize=(12, 12))
     one_chunk = np.tile(breath_changes, 10)
     y = fft(one_chunk - one_chunk.mean())
-    x = fftfreq(len(one_chunk), 1 / 30)
+    x = fftfreq(len(one_chunk), 1 / FPS)
     plt.plot(x, np.abs(y))
     plt.xlim(.1, 3)
     plt.ylim(0, 100)
@@ -90,7 +91,7 @@ def get_frequency():
 
 def make_verdict(freq, times):
     print("Частота вашего дыхания: {:.2} вздохов в секунду".format(freq))
-    print("За время измерений вы вздохнули {:.0f} раз".format(times / 30 * freq))
+    print("За время измерений вы вздохнули {:.0f} раз".format(times / FPS * freq))
     verdict = ""
     breath_in_minute = freq * 60
     if 15 <= breath_in_minute <= 20:
