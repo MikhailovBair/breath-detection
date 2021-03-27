@@ -108,15 +108,6 @@ def get_frequency(graph=False):
     one_chunk = np.tile(breath_changes, 10)
     y = fft(one_chunk - one_chunk.mean())
     x = fftfreq(len(one_chunk), 1 / FPS)
-    # if graph:
-    #     plt.figure(figsize=(12, 12))
-    #     plt.plot(x, np.abs(y))
-    #     plt.xlim(.1, 3)
-    #     plt.ylim(0, 120)
-    #     plt.title('Изменение частоты дыхания после преобразования Фурье')
-    #     plt.xlabel('Частоты')
-    #     plt.ylabel('Амплитуда')
-    #     plt.savefig("kek.png")
     mask = (x >= .28)
     frequency = x[mask][abs(y[mask]).argmax()]
     return frequency
