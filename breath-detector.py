@@ -73,10 +73,16 @@ def process_video():
             plt.xlim(max(sz - 50, 0), sz)
             plt.pause(0.001)
             if len(frames) == frames_max:
-                frame = cv2.putText(frame, "pulse: {:.2f}".format(pulse_from_sample(frames) * 60), (10, 30),
-                                    cv2.FONT_ITALIC,
-                                    1.1,
-                                    (255, 0, 0), 2)
+                cv2.rectangle(frame, (0, 0), (400, 100), (255, 255, 255), cv2.FILLED)
+                cv2.putText(frame, "pulse: {:.2f}".format(pulse_from_sample(frames) * 60), (10, 30),
+                            cv2.FONT_ITALIC,
+                            1.1,
+                            (255, 0, 0), 2)
+                cv2.putText(frame, "breathing rate: {:.2f}".format(get_frequency()), (10, 60),
+                            cv2.FONT_ITALIC,
+                            1.1,
+                            (0, 255, 0), 2)
+
             cv2.imshow('Frame', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -90,14 +96,14 @@ def get_frequency():
             breath_changes = np.array(json.load(read_file))
 
     plt.plot(np.arange(len(breath_changes)), breath_changes)
-    plt.figure(figsize=(12, 12))
+    #plt.figure(figsize=(12, 12))
     one_chunk = np.tile(breath_changes, 10)
     y = fft(one_chunk - one_chunk.mean())
     x = fftfreq(len(one_chunk), 1 / FPS)
-    plt.plot(x, np.abs(y))
-    plt.xlim(.1, 3)
-    plt.ylim(0, 100)
-    plt.show()
+    # plt.plot(x, np.abs(y))
+    # plt.xlim(.1, 3)
+    # plt.ylim(0, 100)
+    # plt.show()
     mask = (x >= .28)
     frequency = x[mask][abs(y[mask]).argmax()]
     return frequency
