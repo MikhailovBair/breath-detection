@@ -29,6 +29,10 @@ def process_video():
     last_time = -DETECTION_CHANGE_PERIOD
     frames = []
     frames_max = 150
+
+    pulse = 0
+    breath = 0
+
     while True:
         global chest_sizes, breath_changes
         i += 1
@@ -72,18 +76,22 @@ def process_video():
             plt.plot(np.arange(max(sz - 50, 0), sz), breath_changes[-50:])
             plt.xlim(max(sz - 50, 0), sz)
             plt.pause(0.001)
-            if len(frames) == frames_max:
-                cv2.rectangle(frame, (0, 0), (400, 100), (255, 255, 255), cv2.FILLED)
-                cv2.putText(frame, "pulse: {:.2f}".format(pulse_from_sample(frames) * 60), (10, 30),
-                            cv2.FONT_ITALIC,
-                            1.1,
-                            (255, 0, 0), 2)
-                cv2.putText(frame, "breathing rate: {:.2f}".format(get_frequency()), (10, 60),
-                            cv2.FONT_ITALIC,
-                            1.1,
-                            (0, 255, 0), 2)
 
-            cv2.imshow('Frame', frame)
+            if len(frames) == frames_max:
+                pulse = pulse_from_sample(frames) * 60
+                breath = get_frequency()
+
+        cv2.rectangle(frame, (0, 0), (400, 100), (255, 255, 255), cv2.FILLED)
+        cv2.putText(frame, "pulse: {:.2f}".format(pulse), (10, 30),
+                    cv2.FONT_ITALIC,
+                    1.1,
+                    (255, 0, 0), 2)
+        cv2.putText(frame, "breathing rate: {:.2f}".format(breath), (10, 60),
+                    cv2.FONT_ITALIC,
+                    1.1,
+                    (0, 255, 0), 2)
+
+        cv2.imshow('Frame', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
