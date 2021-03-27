@@ -5,7 +5,7 @@
 
 ### Установка:
 1. Склонировать репозиторий
-2. pip install -r requirements.txt
+2. conda env create -f environment.yml
 
 ### Запуск:
 1. python3 breath_detector.py [Название видео без расширения и без префикса `video/`] [Расширенее (e.g. MOV)] 0
