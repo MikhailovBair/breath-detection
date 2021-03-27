@@ -57,6 +57,8 @@ def process_video():
         plt.plot(np.arange(len(breath_changes)), breath_changes)
         plt.pause(0.1)
         cv2.imshow('Crop', crop_img)
+        freq = get_frequency()
+        make_verdict(freq, len(breath_changes))
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -68,31 +70,37 @@ def get_frequency():
         with open(breath_changes_name, "r") as read_file:
             breath_changes = np.array(json.load(read_file))
 
-    plt.plot(np.arange(len(breath_changes)), breath_changes)
-    plt.figure(figsize=(12, 12))
+    # plt.plot(np.arange(len(breath_changes)), breath_changes)
+    # plt.pause(0.1)
+    # plt.figure(figsize=(12, 12))
     one_chunk = np.tile(breath_changes, 10)
     y = fft(one_chunk - one_chunk.mean())
     x = fftfreq(len(one_chunk), 1 / FPS)
-    plt.plot(x, np.abs(y))
-    plt.xlim(.1, 3)
-    plt.ylim(0, 100)
-    plt.show()
+    # plt.plot(x, np.abs(y))
+    # plt.xlim(.1, 3)
+    # plt.ylim(0, 100)
+    # plt.pause(0.1)
     mask = (x >= .28)
     frequency = x[mask][abs(y[mask]).argmax()]
     return frequency
 
 
 def make_verdict(freq, times):
-    print("Частота вашего дыхания: {:.2} вздохов в секунду".format(freq))
-    print("За время измерений вы вздохнули {:.0f} раз".format(times / FPS * freq))
+    text_img = np.zeros((200, 800, 3), np.uint8)
+    freq_text = "Frequency of your breath: {:.2f} breathes in second".format(freq)
+    amount_text = "You have breathed {:.0f} times".format(times / FPS * freq)
     breath_in_minute = freq * 60
     if 15 <= breath_in_minute <= 20:
-        verdict = "Ваше дыхание нормальное"
+        verdict_text = "Your breath is normal"
     elif breath_in_minute > 20:
-        verdict = "Ваше дыхание учащено"
+        verdict_text = "Your breath is heavy"
     else:
-        verdict = "Ваше дыхание нечастое"
-    print(verdict)
+        verdict_text = "Your breath is rare"
+
+    cv2.putText(text_img, freq_text, (12, 50), cv2.FONT_ITALIC, 0.9, (0, 150, 0), 3)
+    cv2.putText(text_img, amount_text, (12, 100), cv2.FONT_ITALIC, 0.9, (0, 150, 0), 3)
+    cv2.putText(text_img, verdict_text, (12, 150), cv2.FONT_ITALIC, 0.9, (0, 150, 0), 3)
+    cv2.imshow('Breath frequency', text_img)
 
 
 if not should_not_process_video:
