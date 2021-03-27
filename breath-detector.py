@@ -4,6 +4,7 @@ import numpy as np
 import sys
 from matplotlib import pyplot as plt
 from scipy.fft import fft, fftfreq
+from pulse_detector import pulse_from_sample, crop_fragment
 
 DETECTION_CHANGE_PERIOD = 120
 FPS = 30
@@ -26,6 +27,8 @@ def process_video():
     x, y, w, h = 0, 0, 0, 0
     i = 0
     last_time = -DETECTION_CHANGE_PERIOD
+    frames = []
+    frames_max = 150
     while True:
         global chest_sizes, breath_changes
         i += 1
@@ -43,8 +46,19 @@ def process_video():
             x, y, w, h = faces[0]
             last_time = i
 
+        face = crop_fragment(frame, faces[0])
+        face = np.mean(face[:, :, 1])
+        if len(frames) < frames_max:
+            frames = frames[0:] + [face]
+        else:
+            frames = frames[1:] + [face]
+
         frame = cv2.GaussianBlur(frame, (7, 7), 0)
         crop_img = frame[y + round(1.2 * h): y + round(3 * h), x - round(w * 0.3): x + round(w * 1.4)]
+        frame = cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 255), 2)
+        frame = cv2.rectangle(frame, (x - round(w * 0.3), y + round(1.2 * h)), (x + round(w * 1.4), y + round(3 * h)),
+                              (255, 255, 255), 2)
+        frame = cv2.rectangle(frame, (x + w // 3, y + h // 15), (x + 2 * w // 3, y + h // 5), (255, 255, 255), 2)
 
         mean = np.mean(crop_img, (0, 1), keepdims=True)
         cnt = np.sum((np.sum(np.abs(crop_img - mean), axis=2) < 40))
@@ -58,7 +72,12 @@ def process_video():
             plt.plot(np.arange(max(sz - 50, 0), sz), breath_changes[-50:])
             plt.xlim(max(sz - 50, 0), sz)
             plt.pause(0.001)
-            cv2.imshow('Crop', crop_img)
+            if len(frames) == frames_max:
+                frame = cv2.putText(frame, "pulse: {:.2f}".format(pulse_from_sample(frames) * 60), (10, 30),
+                                    cv2.FONT_ITALIC,
+                                    1.1,
+                                    (255, 0, 0), 2)
+            cv2.imshow('Frame', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
