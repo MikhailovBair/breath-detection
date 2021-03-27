@@ -5,7 +5,6 @@ import sys
 from matplotlib import pyplot as plt
 from scipy.fft import fft, fftfreq
 
-
 DETECTION_CHANGE_PERIOD = 120
 FPS = 30
 name = sys.argv[1]
@@ -54,9 +53,12 @@ def process_video():
         if abs(chest_sizes[-1] - chest_sizes[-2]) < 0.01:
             breath_changes = np.append(breath_changes, breath_changes[-1] + chest_sizes[-1] - chest_sizes[-2])
 
-        plt.plot(np.arange(len(breath_changes)), breath_changes)
-        plt.pause(0.1)
-        cv2.imshow('Crop', crop_img)
+        if i % 10 == 0:
+            sz = len(breath_changes)
+            plt.plot(np.arange(max(sz - 50, 0), sz), breath_changes[-50:])
+            plt.xlim(max(sz - 50, 0), sz)
+            plt.pause(0.001)
+            cv2.imshow('Crop', crop_img)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -100,7 +102,6 @@ if not should_not_process_video:
 
 cap.release()
 cv2.destroyAllWindows()
-
 
 freq = get_frequency()
 make_verdict(freq, len(breath_changes))
