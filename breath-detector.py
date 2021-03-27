@@ -97,37 +97,59 @@ def process_video():
             break
 
 
-def get_frequency():
+def get_frequency(graph=False):
     global breath_changes
     if should_not_process_video:
         with open(breath_changes_name, "r") as read_file:
             breath_changes = np.array(json.load(read_file))
 
-    plt.plot(np.arange(len(breath_changes)), breath_changes)
-    #plt.figure(figsize=(12, 12))
+    #plt.plot(np.arange(len(breath_changes)), breath_changes)
+    #
     one_chunk = np.tile(breath_changes, 10)
     y = fft(one_chunk - one_chunk.mean())
     x = fftfreq(len(one_chunk), 1 / FPS)
-    # plt.plot(x, np.abs(y))
-    # plt.xlim(.1, 3)
-    # plt.ylim(0, 100)
-    # plt.show()
+    # if graph:
+    #     plt.figure(figsize=(12, 12))
+    #     plt.plot(x, np.abs(y))
+    #     plt.xlim(.1, 3)
+    #     plt.ylim(0, 120)
+    #     plt.title('Изменение частоты дыхания после преобразования Фурье')
+    #     plt.xlabel('Частоты')
+    #     plt.ylabel('Амплитуда')
+    #     plt.savefig("kek.png")
     mask = (x >= .28)
     frequency = x[mask][abs(y[mask]).argmax()]
     return frequency
 
 
 def make_verdict(freq, times):
-    print("Частота вашего дыхания: {:.2} вздохов в секунду".format(freq))
-    print("За время измерений вы вздохнули {:.0f} раз".format(times / FPS * freq))
     breath_in_minute = freq * 60
     if 15 <= breath_in_minute <= 20:
-        verdict = "Ваше дыхание нормальное"
+        verdict = "Your breath is normal"
     elif breath_in_minute > 20:
-        verdict = "Ваше дыхание учащено"
+        verdict = "You breath heavy"
     else:
-        verdict = "Ваше дыхание нечастое"
-    print(verdict)
+        verdict = "You breath lightly"
+
+    while True:
+        ans = np.zeros((130, 900, 3))
+
+        cv2.putText(ans, "Your breath rate is: {:.2} breathes per sec".format(freq), (10, 30),
+                    cv2.FONT_ITALIC,
+                    1.1,
+                    (255, 0, 0), 2)
+        cv2.putText(ans, "You have breathed {:.0f} times".format(times / FPS * freq), (10, 60),
+                    cv2.FONT_ITALIC,
+                    1.1,
+                    (0, 255, 0), 2)
+        cv2.putText(ans, verdict, (10, 90),
+                    cv2.FONT_ITALIC,
+                    1.1,
+                    (0, 0, 255), 2)
+        cv2.imshow('Frame', ans)
+
+        if cv2.waitKey(0) & 0xFF == ord('q'):
+            break
 
 
 if not should_not_process_video:
@@ -136,5 +158,5 @@ if not should_not_process_video:
 cap.release()
 cv2.destroyAllWindows()
 
-freq = get_frequency()
+freq = get_frequency(True)
 make_verdict(freq, len(breath_changes))
