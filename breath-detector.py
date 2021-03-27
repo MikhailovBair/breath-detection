@@ -19,9 +19,6 @@ cap = cv2.VideoCapture(video_name)
 cap.set(cv2.CAP_PROP_FPS, FPS)
 face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-
 chest_sizes = np.array([0])
 breath_changes = np.array([0])
 
@@ -57,12 +54,8 @@ def process_video():
         if abs(chest_sizes[-1] - chest_sizes[-2]) < 0.01:
             breath_changes = np.append(breath_changes, breath_changes[-1] + chest_sizes[-1] - chest_sizes[-2])
 
-        ax.plot(np.arange(len(breath_changes)), breath_changes)
-        fig.canvas.draw()
-        plot_img_np = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-        plot_img_np = plot_img_np.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-        plt.cla()
-        cv2.imshow('Graph', plot_img_np)
+        plt.plot(np.arange(len(breath_changes)), breath_changes)
+        plt.pause(0.1)
         cv2.imshow('Crop', crop_img)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -92,7 +85,6 @@ def get_frequency():
 def make_verdict(freq, times):
     print("Частота вашего дыхания: {:.2} вздохов в секунду".format(freq))
     print("За время измерений вы вздохнули {:.0f} раз".format(times / FPS * freq))
-    verdict = ""
     breath_in_minute = freq * 60
     if 15 <= breath_in_minute <= 20:
         verdict = "Ваше дыхание нормальное"
